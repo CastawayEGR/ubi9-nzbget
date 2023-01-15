@@ -1,0 +1,30 @@
+name: NZBGet CI/CD
+on: [ push ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: deploy
+    steps:
+      - name: Checkout repo
+        id: checkout-repo
+        uses: actions/checkout@v2
+        
+      - name: Build Image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: nzbget
+          tags: latest 21.1 ${{ github.sha }}
+          containerfiles: |
+            ./Dockerfile
+
+      - name: Push to quay.io
+        id: push-to-quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: nzbget
+          tags: latest 21.1 ${{ github.sha }}
+          registry: quay.io/castawayegr
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
